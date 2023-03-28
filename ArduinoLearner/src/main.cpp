@@ -50,40 +50,37 @@ bool expectedLabel;
 
 void loop() {
   std::string toPrint = "";
-  for (int partIndex = 0; partIndex < partitionDim; partIndex++){
-    if (Serial.available() > 0) {
-      std::string data = Serial.readStringUntil('\n').c_str();
-      Serial.print(data.c_str());
-      //parsing input string
-      std::vector<std::string> v;
-      std::stringstream sstr(data);
-      while(sstr.good())
-      {
-          std::string substr;
-          getline(sstr, substr, ',');
-          v.push_back(substr);
-      }
+  if (Serial.available() > 0) {
+    //Serial.println("data received");
+    std::string data = Serial.readStringUntil('\n').c_str();
+    //Serial.println(data.c_str());
+
+    //parsing input string
+    std::stringstream sstr(data);
+    while(sstr.good()){
+      std::string substr;
+      std::string singleFeature;
+      getline(sstr, substr, ';');
+      std::stringstream subsstr(data);
+      
       for (int i = 0; i < FEATURE_COUNT; i++) {
-        feature[i] = std::stof(v[i]);
-        #ifdef DEBUG
-        Serial.print(feature[i],6);
-        Serial.print(",");
-        #endif
+        getline(subsstr, singleFeature, ',');
+        feature[i] = std::stof(singleFeature);
       }
-      expectedLabel = v[FEATURE_COUNT].compare("b'UP'") == 0;
-      #ifdef DEBUG
-      Serial.print(expectedLabel);
-      #endif
+      getline(subsstr, singleFeature, ',');
+      expectedLabel = singleFeature.compare("b'UP'") == 0;
+
+
       std::vector<std::vector<float>> featureVector;
       featureVector.push_back(feature);
       toPrint = toPrint.append("predicted: ");
       toPrint = toPrint.append(std::to_string(classifier.predict(featureVector[0])));
-      
+      //Serial.print(toPrint.c_str());
       classifier.fit(featureVector, expectedLabel);
-      toPrint = toPrint.append(",");
+      toPrint = toPrint.append(","); 
     }
+  Serial.println(toPrint.append("0;").c_str());
   }
-  Serial.println(toPrint.append(";").c_str());
 }
 
 
