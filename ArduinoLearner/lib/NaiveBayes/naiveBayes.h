@@ -31,7 +31,7 @@ class Naive_Bayes{
             Summary.push_back(summary);
         }
     }
-    void fit(std::vector<std::vector<float>> newData, int label);
+    void fit(std::vector<float> newData, int label);
     int  predict(const std::vector<float>& test_data);
 };
 

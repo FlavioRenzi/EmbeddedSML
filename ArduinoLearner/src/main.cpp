@@ -3,13 +3,14 @@
 #include <string>
 #include <sstream>
 
-#include "naiveBayes.h"
+#include <naiveBayes.h>
 
 //#define DEBUG
 
 
 #define FEATURE_COUNT 5
 
+unsigned long lastTime = 0;
 
 int partitionDim = 1;
 
@@ -46,40 +47,45 @@ void setup() {
 
 //dataset definiton
 std::vector<float> feature(FEATURE_COUNT,0.0);
-bool expectedLabel;
+int expectedLabel;
 
 void loop() {
   std::string toPrint = "";
   if (Serial.available() > 0) {
-    //Serial.println("data received");
     std::string data = Serial.readStringUntil('\n').c_str();
-    //Serial.println(data.c_str());
 
     //parsing input string
     std::stringstream sstr(data);
-    while(sstr.good()){
+    int x = 0;
+    while(sstr.good() && x < partitionDim){
+      x++;
       std::string substr;
       std::string singleFeature;
       getline(sstr, substr, ';');
-      std::stringstream subsstr(data);
+      std::stringstream subsstr(substr);
       
       for (int i = 0; i < FEATURE_COUNT; i++) {
         getline(subsstr, singleFeature, ',');
         feature[i] = std::stof(singleFeature);
       }
       getline(subsstr, singleFeature, ',');
-      expectedLabel = singleFeature.compare("b'UP'") == 0;
+      expectedLabel = atoi(singleFeature.c_str());
 
+      //prediction
+      toPrint.append("predicted: ");
+      lastTime = micros();
+      toPrint.append(std::to_string(classifier.predict(feature)));
+      toPrint = toPrint.append(", prediction_time: " + std::to_string(micros() - lastTime));
 
-      std::vector<std::vector<float>> featureVector;
-      featureVector.push_back(feature);
-      toPrint = toPrint.append("predicted: ");
-      toPrint = toPrint.append(std::to_string(classifier.predict(featureVector[0])));
-      //Serial.print(toPrint.c_str());
-      classifier.fit(featureVector, expectedLabel);
-      toPrint = toPrint.append(","); 
+      //model update
+      lastTime = micros();
+      classifier.fit(feature, expectedLabel);
+      toPrint = toPrint.append(", train_time: " + std::to_string(micros() - lastTime));
+
+      toPrint.append(","); 
+      toPrint.append(";");
     }
-  Serial.println(toPrint.append("0;").c_str());
+  Serial.println(toPrint.c_str());
   }
 }
 

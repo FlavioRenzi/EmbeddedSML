@@ -7,25 +7,20 @@
 #include "naiveBayes.h"
 
 
-void Naive_Bayes::fit(std::vector<std::vector<float>> newData, int label){
-    for(std::vector<float> instance : newData){
-        //update class summary
-        //Serial.print(" ckpt1 ");
-        if (Summary[label].counter == 1){
-            Summary[label].means = instance;
-            Summary[label].sumOfSquares = std::vector<float>(instance.size(),0);
-        }else{
-            for(unsigned int i = 0; i < Summary[label].means.size(); i++){
-                //Serial.print(" ckpt2 ");
-                float d1 = instance[i] - Summary[label].means[i];
-                Summary[label].means[i] = (Summary[label].means[i] * Summary[label].counter + instance[i]) / (Summary[label].counter + 1);
-                float d2 = instance[i] - Summary[label].means[i];
-                //Serial.print(" ckpt3 ");
-                Summary[label].sumOfSquares[i] += (d1*d2);
-            }
+void Naive_Bayes::fit(std::vector<float> newData, int label){
+    if (Summary[label].counter == 1){
+        Summary[label].means = newData;
+        Summary[label].sumOfSquares = std::vector<float>(newData.size(),0);
+    }else{
+        for(unsigned int i = 0; i < Summary[label].means.size(); i++){
+            float d1 = newData[i] - Summary[label].means[i];
+            Summary[label].means[i] = (Summary[label].means[i] * Summary[label].counter + newData[i]) / (Summary[label].counter + 1);
+            float d2 = newData[i] - Summary[label].means[i];
+            Summary[label].sumOfSquares[i] += (d1*d2);
         }
-        Summary[label].counter++;
     }
+    Summary[label].counter++;
+
     return;
 }
 
