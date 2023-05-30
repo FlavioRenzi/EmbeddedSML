@@ -1,26 +1,40 @@
 #include <Arduino.h>
+#include <SoftwareSerial.h>
+
 #include <vector>
 #include <string>
 #include <sstream>
 
 #include <naiveBayes.h>
+#include <HoeffdingTree.h>
+
 
 //#define DEBUG
 
 
-#define FEATURE_COUNT 5
+unsigned int FEATURE_COUNT = 1;
 
 unsigned long lastTime = 0;
 
 int partitionDim = 1;
 
+SoftwareSerial Serialdbg;
 
-Naive_Bayes classifier(2);
+Naive_Bayes classifier = Naive_Bayes(2);
+
+//HoeffdingTree classifier(0.0000001, 10);
+
+//dataset definiton
+std::vector<float> feature(FEATURE_COUNT,0.0);
+int expectedLabel;
 
 
 void setup() {
   Serial.begin(500000);
+  Serialdbg.begin(115200, SWSERIAL_8N1, 13, 15);
   delay(100);
+
+  Serialdbg.println("Serialdbg started");
 
   Serial.println("Serial started");
   Serial.println("waiting for configuration msg");
@@ -36,18 +50,23 @@ void setup() {
       //Serial.println(arg.substr(cfg.find(':')+1).c_str());
       partitionDim = atoi(arg.substr(cfg.find(':')+1).c_str());
     }
+    if (arg.substr(0,arg.find(':')).find("featureCount") != std::string::npos) {
+      //Serial.println(arg.substr(cfg.find(':')+1).c_str());
+      FEATURE_COUNT = atoi(arg.substr(cfg.find(':')+1).c_str());
+      feature.resize(FEATURE_COUNT,0.0);
+    }
     cfg.erase(0, cfg.find(',') + 1);
   }
   Serial.println("configuration msg received");
-  Serial.println("partitionDim: " + String(partitionDim));
+  Serial.println("partitionDim: " + String(partitionDim) + ", featureCount: " + String(FEATURE_COUNT));
+
+  
 
   Serial.println("start sending data");
 }
 
 
-//dataset definiton
-std::vector<float> feature(FEATURE_COUNT,0.0);
-int expectedLabel;
+
 
 void loop() {
   std::string toPrint = "";
@@ -64,10 +83,12 @@ void loop() {
       getline(sstr, substr, ';');
       std::stringstream subsstr(substr);
       
-      for (int i = 0; i < FEATURE_COUNT; i++) {
+      for (unsigned int i = 0; i < FEATURE_COUNT; i++) {
         getline(subsstr, singleFeature, ',');
         feature[i] = std::stof(singleFeature);
+        //Serialdbg.println(singleFeature.c_str() + String(" ") + String(i));
       }
+      //Serialdbg.println("m feature size: " + String(feature.size()));
       getline(subsstr, singleFeature, ',');
       expectedLabel = atoi(singleFeature.c_str());
 

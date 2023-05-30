@@ -12,6 +12,7 @@ void Naive_Bayes::fit(std::vector<float> newData, int label){
         Summary[label].means = newData;
         Summary[label].sumOfSquares = std::vector<float>(newData.size(),0);
     }else{
+        Summary[label].class_prob = 1.0/Summary.size();
         for(unsigned int i = 0; i < Summary[label].means.size(); i++){
             float d1 = newData[i] - Summary[label].means[i];
             Summary[label].means[i] = (Summary[label].means[i] * Summary[label].counter + newData[i]) / (Summary[label].counter + 1);
@@ -28,7 +29,7 @@ void Naive_Bayes::fit(std::vector<float> newData, int label){
 
 int Naive_Bayes::predict(const std::vector<float>& test_data){
     std::vector<float> out;
-    for (int label = 0; label < labelNumber; label++){
+    for (unsigned int label = 0; label < Summary.size(); label++){
        out.push_back(prob_By_Summary(test_data ,Summary[label] ));
     }
     int maxElementIndex = std::max_element(out.begin(),out.end()) - out.begin();
@@ -41,12 +42,6 @@ float prob_By_Summary(const std::vector<float> &test_data ,const class_summary &
     for (unsigned int i = 0; i < summary.means.size(); i++){
         float stdev = sqrt(summary.sumOfSquares[i]/summary.counter);
         prob *= calc_prob(test_data[i],summary.means[i],stdev);
-        #ifdef DEBUG
-        Serial.print(" stdev: ");
-        Serial.print(stdev);
-        Serial.print(" mean: ");
-        Serial.print(summary.means[i]);
-        #endif
     }
     /* multiplying by the class probability*/
     prob *= summary.class_prob;

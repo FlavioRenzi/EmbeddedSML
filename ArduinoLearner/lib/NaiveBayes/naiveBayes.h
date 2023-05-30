@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <ctime>
+#include <map>
 
 
 #ifndef NAIVEBAYES_H
@@ -13,22 +14,18 @@ typedef struct class_summary {
     std::vector<float> sumOfSquares;
     int counter;
     float class_prob;
-
 } class_summary; 
 
 class Naive_Bayes{
     private:
-    std::vector<class_summary> Summary;
-    int labelNumber;
+    std::map<int, class_summary> Summary;
     
     public:
     Naive_Bayes(int classNumber){
-        labelNumber = classNumber;
         for (int i = 0; i < classNumber; i++){
             class_summary summary;
             summary.counter = 1;
-            summary.class_prob = 1.0/classNumber;
-            Summary.push_back(summary);
+            Summary[0] = summary;
         }
     }
     void fit(std::vector<float> newData, int label);
