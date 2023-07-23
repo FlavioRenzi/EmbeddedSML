@@ -10,9 +10,7 @@
 #include <queue>
 
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 
-extern SoftwareSerial Serialdbg;
 
 
 

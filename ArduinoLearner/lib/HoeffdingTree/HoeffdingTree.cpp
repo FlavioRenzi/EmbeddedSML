@@ -34,11 +34,11 @@ float ClassObserver::getFeatureProbability(int featureNumber, float x){
         return 0;
     }
     float std_deviation = sqrt(sumOfSquares[featureNumber]/counter);
-    //Serialdbg.println("std_deviation: " + String(std_deviation) + ", means[featureNumber]: " + String(means[featureNumber]) + ", x: " + String(x));
+    //Serial2.println("std_deviation: " + String(std_deviation) + ", means[featureNumber]: " + String(means[featureNumber]) + ", x: " + String(x));
     float z = (x - means[featureNumber]) / std_deviation;
-    //Serialdbg.println("z: " + String(z));
+    //Serial2.println("z: " + String(z));
     float p = (1.0 + std::erf(z / std::sqrt(2.0))) / 2.0;
-    //Serialdbg.println("p: " + String(p));
+    //Serial2.println("p: " + String(p));
     return p;
 }
 
@@ -56,7 +56,7 @@ void Node::update_statistics(const std::vector<float>& features, int class_label
                 bestClass = classObserver.first;
             }
         }
-        this->class_label = 1-bestClass;
+        this->class_label = bestClass;
     }else{
         if (features[feature] < split_value){
             children[0]->update_statistics(features, class_label);
@@ -71,9 +71,9 @@ std::vector<Split> Node::getBestSplitSuggestions(){
     for (unsigned int i = 0; i < classes.size(); i++){
         Split split;
         for (unsigned int feature = 0; feature < classes[i].means.size(); feature++){
-            //Serialdbg.println("getting split suggestions");
+            //Serial2.println("getting split suggestions");
             std::vector<float> splitSuggestions = getSplitSuggestions(feature);
-            //Serialdbg.println("got split suggestions");
+            //Serial2.println("got split suggestions");
             for (auto& splitValue : splitSuggestions){
                 split.feature = feature;
                 split.split_value = splitValue;
@@ -83,15 +83,15 @@ std::vector<Split> Node::getBestSplitSuggestions(){
                 split.right_dist = std::vector<float>(classes.size());
                 
                 for (unsigned int j = 0; j < classes.size(); j++){
-                    //Serialdbg.println("adding instance to split");
+                    //Serial2.println("adding instance to split");
                     split.left_dist[j] = classes[j].getFeatureProbability(feature, splitValue);
-                    //Serialdbg.println("added instance to split");
+                    //Serial2.println("added instance to split");
                     split.right_dist[j] = 1- split.left_dist[j];
-                    //Serialdbg.println("added instance to split");
+                    //Serial2.println("added instance to split");
                 }
                 //split.left_classes[i].maxValues[feature] = splitValue;
                 //split.right_classes[i].minValues[feature] = splitValue;
-                //Serialdbg.println("calculating gini");
+                //Serial2.println("calculating gini");
                 split.gini = gini_index_of_split(split);
 
                 bestSplits.push_back(split);
@@ -116,7 +116,7 @@ float Node::gini_index_of_split(Split split){
         left_weight += split.left_dist[i];
         right_weight += split.right_dist[i];
     }
-    //Serialdbg.println("left weight: " + String(left_weight) + ", right weight: " + String(right_weight));
+    //Serial2.println("left weight: " + String(left_weight) + ", right weight: " + String(right_weight));
 
     float gini = 0.0;
     gini += (left_weight/(left_weight + right_weight)) * computeGini(split.left_dist, left_weight);
@@ -156,13 +156,13 @@ void Node::attemptToSplit(){
     }
     //todo add check for purity
     std::vector<Split> bestSplits = getBestSplitSuggestions();
-    //Serialdbg.println("best splits");
+    //Serial2.println("best splits");
     float bestGini = std::numeric_limits<float>::min();
     float secondBestGini = std::numeric_limits<float>::min();
     Split bestSplit;
     Split secondBestSplit;
     for (auto& split : bestSplits){
-        //Serialdbg.println("gini: " + String(split.gini));
+        //Serial2.println("gini: " + String(split.gini));
         if (split.gini > bestGini){
             secondBestGini = bestGini;
             secondBestSplit = bestSplit;
@@ -173,19 +173,19 @@ void Node::attemptToSplit(){
             secondBestSplit = split;
         }
     }
-    //Serialdbg.println("best gini: " + String(bestGini));
+    //Serial2.println("best gini: " + String(bestGini));
     //compute Hoeffding bound
     float R = 1.0;
     float delta = 0.5;
     float n = std::accumulate(classes.begin(), classes.end(), 0, [](int sum, std::pair<int, ClassObserver> p){return sum + p.second.counter;});
 
     float epsilon = sqrt((R*R*log(1.0/delta))/(2.0*n));
-    //Serialdbg.println("epsilon: " + String(epsilon));
-    Serialdbg.println("best gini: " + String(bestGini) + ", second best gini: " + String(secondBestGini) + ", epsilon: " + String(epsilon));
+    //Serial2.println("epsilon: " + String(epsilon));
+    Serial2.println("best gini: " + String(bestGini) + ", second best gini: " + String(secondBestGini) + ", epsilon: " + String(epsilon));
 
     if (bestGini - secondBestGini > epsilon){
         //split
-        Serialdbg.println("splitting");
+        Serial2.println("splitting");
         is_leaf = false;
         feature = bestSplit.feature;
         split_value = bestSplit.split_value;
@@ -209,9 +209,9 @@ void HoeffdingTree::fit(const std::vector<float>&features, int class_label){
             node = node->children[1];
         }
     }
-    //Serialdbg.println("updating statistics");
+    //Serial2.println("updating statistics");
     node->update_statistics(features, class_label);
-    //Serialdbg.println("attempting to split");
+    //Serial2.println("attempting to split");
     node->attemptToSplit();
 }
 
@@ -224,6 +224,6 @@ int HoeffdingTree::predict(const std::vector<float>&features){
             node = node->children[1];
         }
     }
-    //Serialdbg.println("predicted class: "+ String(node->class_label));
+    //Serial2.println("predicted class: "+ String(node->class_label));
     return node->class_label;
 }

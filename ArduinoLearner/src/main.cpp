@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 
 #include <vector>
 #include <string>
@@ -18,7 +17,6 @@ unsigned long lastTime = 0;
 
 int partitionDim = 1;
 
-SoftwareSerial Serialdbg;
 
 Naive_Bayes classifier = Naive_Bayes(2);
 
@@ -31,15 +29,16 @@ int expectedLabel;
 
 void setup() {
   Serial.begin(500000);
-  Serialdbg.begin(115200, SWSERIAL_8N1, 13, 15);
+  Serial1.begin(115200, SERIAL_8N1, 17,16);
   delay(100);
 
-  Serialdbg.println("Serialdbg started");
+  Serial1.println("Serial1 started");
 
   Serial.println("Serial started");
   Serial.println("waiting for configuration msg");
   while (Serial.available() == 0) {
-    delay(10);
+    delay(100);
+    Serial.println("waiting for configuration msg");
   }
   std::string cfg = Serial.readStringUntil('\n').c_str();
   while(cfg.find(',') != std::string::npos){
@@ -86,9 +85,9 @@ void loop() {
       for (unsigned int i = 0; i < FEATURE_COUNT; i++) {
         getline(subsstr, singleFeature, ',');
         feature[i] = std::stof(singleFeature);
-        //Serialdbg.println(singleFeature.c_str() + String(" ") + String(i));
+        //Serial1.println(singleFeature.c_str() + String(" ") + String(i));
       }
-      //Serialdbg.println("m feature size: " + String(feature.size()));
+      //Serial1.println("m feature size: " + String(feature.size()));
       getline(subsstr, singleFeature, ',');
       expectedLabel = atoi(singleFeature.c_str());
 
