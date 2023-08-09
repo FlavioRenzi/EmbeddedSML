@@ -18,9 +18,9 @@ unsigned long lastTime = 0;
 int partitionDim = 1;
 
 
-Naive_Bayes classifier = Naive_Bayes(2);
+//Naive_Bayes classifier = Naive_Bayes(2);
 
-//HoeffdingTree classifier(0.0000001, 10);
+HoeffdingTree classifier(0.0000001, 10);
 
 //dataset definiton
 std::vector<float> feature(FEATURE_COUNT,0.0);
@@ -28,40 +28,40 @@ int expectedLabel;
 
 
 void setup() {
-  Serial.begin(500000);
-  Serial1.begin(115200, SERIAL_8N1, 17,16);
+  Serial.begin(115200);
+  Serial1.begin(500000, SERIAL_8N1, 4,5);
   delay(100);
 
-  Serial1.println("Serial1 started");
+  Serial.println("Serial1 started");
 
-  Serial.println("Serial started");
-  Serial.println("waiting for configuration msg");
-  while (Serial.available() == 0) {
+  Serial1.println("Serial started");
+  Serial1.println("waiting for configuration msg");
+  while (Serial1.available() == 0) {
     delay(100);
-    Serial.println("waiting for configuration msg");
+    Serial1.println("waiting for configuration msg");
   }
-  std::string cfg = Serial.readStringUntil('\n').c_str();
+  std::string cfg = Serial1.readStringUntil('\n').c_str();
   while(cfg.find(',') != std::string::npos){
-    //Serial.println("chk1");
+    //Serial1.println("chk1");
     std::string arg = cfg.substr(0,cfg.find(','));
-    //Serial.println(arg.c_str());
+    //Serial1.println(arg.c_str());
     if (arg.substr(0,arg.find(':')).find("partitionDim") != std::string::npos) {
-      //Serial.println(arg.substr(cfg.find(':')+1).c_str());
+      //Serial1.println(arg.substr(cfg.find(':')+1).c_str());
       partitionDim = atoi(arg.substr(cfg.find(':')+1).c_str());
     }
     if (arg.substr(0,arg.find(':')).find("featureCount") != std::string::npos) {
-      //Serial.println(arg.substr(cfg.find(':')+1).c_str());
+      //Serial1.println(arg.substr(cfg.find(':')+1).c_str());
       FEATURE_COUNT = atoi(arg.substr(cfg.find(':')+1).c_str());
       feature.resize(FEATURE_COUNT,0.0);
     }
     cfg.erase(0, cfg.find(',') + 1);
   }
-  Serial.println("configuration msg received");
-  Serial.println("partitionDim: " + String(partitionDim) + ", featureCount: " + String(FEATURE_COUNT));
+  Serial1.println("configuration msg received");
+  Serial1.println("partitionDim: " + String(partitionDim) + ", featureCount: " + String(FEATURE_COUNT));
 
   
 
-  Serial.println("start sending data");
+  Serial1.println("start sending data");
 }
 
 
@@ -69,8 +69,8 @@ void setup() {
 
 void loop() {
   std::string toPrint = "";
-  if (Serial.available() > 0) {
-    std::string data = Serial.readStringUntil('\n').c_str();
+  if (Serial1.available() > 0) {
+    std::string data = Serial1.readStringUntil('\n').c_str();
 
     //parsing input string
     std::stringstream sstr(data);
@@ -87,7 +87,7 @@ void loop() {
         feature[i] = std::stof(singleFeature);
         //Serial1.println(singleFeature.c_str() + String(" ") + String(i));
       }
-      //Serial1.println("m feature size: " + String(feature.size()));
+      //Serial.println("m feature size: " + String(feature.size()));
       getline(subsstr, singleFeature, ',');
       expectedLabel = atoi(singleFeature.c_str());
 
@@ -105,7 +105,7 @@ void loop() {
       toPrint.append(","); 
       toPrint.append(";");
     }
-  Serial.println(toPrint.c_str());
+  Serial1.println(toPrint.c_str());
   }
 }
 
