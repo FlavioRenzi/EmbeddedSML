@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "XPowersLib.h"
 
 #include <vector>
 #include <string>
@@ -25,9 +26,22 @@ HoeffdingTree classifier(0.0000001, 10);
 //dataset definiton
 std::vector<float> feature(FEATURE_COUNT,0.0);
 int expectedLabel;
+XPowersAXP2101 PMU;
 
 
 void setup() {
+  PMU.begin(Wire, AXP2101_SLAVE_ADDRESS, 38, 39);
+  PMU.setDC4Voltage(1200);   // Here is the FPGA core voltage. Careful review of the manual is required before modification.
+  PMU.setALDO1Voltage(3300); // BANK0 area voltage
+  PMU.setALDO2Voltage(3300); // BANK1 area voltage
+  PMU.setALDO3Voltage(2500); // BANK2 area voltage
+  PMU.setALDO4Voltage(1800); // BANK3 area voltage
+
+  PMU.enableALDO1();
+  PMU.enableALDO2();
+  PMU.enableALDO3();
+  PMU.enableALDO4();
+
   Serial.begin(115200);
   Serial1.begin(500000, SERIAL_8N1, 4,5);
   delay(100);

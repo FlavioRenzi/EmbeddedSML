@@ -44,7 +44,7 @@ float ClassObserver::getFeatureProbability(int featureNumber, float x){
 
 void Node::update_statistics(const std::vector<float>& features, int class_label){
     if (is_leaf){
-        if (classes.find(class_label) == classes.end()){
+        if (classes.find(class_label) == classes.end()){//if new class
             classes[class_label] = ClassObserver();
         }
         classes[class_label].addInstance(features);
@@ -56,7 +56,7 @@ void Node::update_statistics(const std::vector<float>& features, int class_label
                 bestClass = classObserver.first;
             }
         }
-        this->class_label = 1-bestClass;
+        this->class_label = bestClass;
     }else{
         if (features[feature] < split_value){
             children[0]->update_statistics(features, class_label);
@@ -176,12 +176,12 @@ void Node::attemptToSplit(){
     //Serial.println("best gini: " + String(bestGini));
     //compute Hoeffding bound
     float R = 1.0;
-    float delta = 0.5;
+    float delta = 0.8;
     float n = std::accumulate(classes.begin(), classes.end(), 0, [](int sum, std::pair<int, ClassObserver> p){return sum + p.second.counter;});
 
     float epsilon = sqrt((R*R*log(1.0/delta))/(2.0*n));
     //Serial.println("epsilon: " + String(epsilon));
-    Serial.println("best gini: " + String(bestGini) + ", second best gini: " + String(secondBestGini) + ", epsilon: " + String(epsilon));
+    Serial.println("best gini: " + String(bestGini,4U) + ", second best gini: " + String(secondBestGini,4U) + ", epsilon: " + String(epsilon,4U));
 
     if (bestGini - secondBestGini > epsilon){
         //split
@@ -196,6 +196,7 @@ void Node::attemptToSplit(){
             children[0]->classes[i] = bestSplit.left_classes[i];
             children[1]->classes[i] = bestSplit.right_classes[i];
         }
+        Serial.println("[APP] Free memory: " + String(esp_get_free_heap_size()) + " bytes");
     }
 
 }
