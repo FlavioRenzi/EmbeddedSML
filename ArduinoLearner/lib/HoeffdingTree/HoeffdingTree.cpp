@@ -181,11 +181,11 @@ void Node::attemptToSplit(){
 
     float epsilon = sqrt((R*R*log(1.0/delta))/(2.0*n));
     //Serial.println("epsilon: " + String(epsilon));
-    Serial.println("best gini: " + String(bestGini,4U) + ", second best gini: " + String(secondBestGini,4U) + ", epsilon: " + String(epsilon,4U));
+    //Serial.println("best gini: " + String(bestGini,4U) + ", second best gini: " + String(secondBestGini,4U) + ", epsilon: " + String(epsilon,4U));
 
     if (bestGini - secondBestGini > epsilon){
         //split
-        Serial.println("splitting");
+        Serial.println("splitting on feature " + String(bestSplit.feature) + " with split value " + String(bestSplit.split_value) + " with gini " + String(bestSplit.gini) + " and epsilon " + String(epsilon) + " and delta " + String(delta) + " and n " + String(n));
         is_leaf = false;
         feature = bestSplit.feature;
         split_value = bestSplit.split_value;

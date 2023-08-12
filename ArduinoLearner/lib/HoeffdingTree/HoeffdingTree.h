@@ -31,7 +31,13 @@ public:
     void addInstance(std::vector<float> features);
     float variance(int class_label);
 
-    ClassObserver() : counter(0) {}
+    ClassObserver() : counter(0) {
+        int featureNumber = 2;//todo make this a parameter
+        means = std::vector<float>(featureNumber, 0);
+        sumOfSquares = std::vector<float>(featureNumber, 0);
+        maxValues = std::vector<float>(featureNumber, std::numeric_limits<float>::min());
+        minValues = std::vector<float>(featureNumber, std::numeric_limits<float>::max());
+    }
 };
 
 typedef struct Split {  
