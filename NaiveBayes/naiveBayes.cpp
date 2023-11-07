@@ -1,7 +1,6 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
-#include <arduino.h>
 #include <ctime>
 
 #include "naiveBayes.h"

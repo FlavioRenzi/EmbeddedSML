@@ -1,5 +1,5 @@
 
-#include "hoeffdingTree.h"
+#include "HoeffdingTree.h"
 
 float ClassObserver::variance(int class_label) {
     return (sumOfSquares[class_label]/counter);
@@ -181,11 +181,11 @@ void Node::attemptToSplit(){
 
     float epsilon = sqrt((R*R*log(1.0/delta))/(2.0*n));
     //Serialdbg.println("epsilon: " + String(epsilon));
-    Serialdbg.println("best gini: " + String(bestGini) + ", second best gini: " + String(secondBestGini) + ", epsilon: " + String(epsilon));
+    //Serialdbg.println("best gini: " + String(bestGini) + ", second best gini: " + String(secondBestGini) + ", epsilon: " + String(epsilon));
 
     if (bestGini - secondBestGini > epsilon){
         //split
-        Serialdbg.println("splitting");
+        //Serialdbg.println("splitting");
         is_leaf = false;
         feature = bestSplit.feature;
         split_value = bestSplit.split_value;
