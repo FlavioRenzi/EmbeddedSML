@@ -28,6 +28,18 @@ public:
     float variance(int class_label);
 
     ClassObserver() : counter(0) {}
+    ClassObserver(std::vector<float> means, std::vector<float> sumOfSquares, std::vector<float> maxValues, std::vector<float> minValues, int counter) :
+        means(means),
+        sumOfSquares(sumOfSquares),
+        maxValues(maxValues),
+        minValues(minValues),
+        counter(counter) {}
+    ClassObserver(int counter) : counter(counter) {
+        means = std::vector<float>();
+        sumOfSquares = std::vector<float>();
+        maxValues = std::vector<float>();
+        minValues = std::vector<float>();
+    }
 };
 
 typedef struct Split {  
@@ -49,17 +61,30 @@ public:
     int feature;
     float split_value;
     int class_label;
+    int min_samples = 50;
+    unsigned int number_of_classes;
     std::map<int, ClassObserver> classes;
-    std::vector<Node*> children;
+    std::vector<Node> children;
     float gini_index_of_split(Split split);
     void update_statistics(const std::vector<float>& features, int class_label);
     std::vector<float> getSplitSuggestions(int feature);
     std::vector<Split> getBestSplitSuggestions();
     void attemptToSplit();
 
-    Node() : is_leaf(true), feature(-1), split_value(0), class_label(0) {}
-    
-
+    Node(unsigned int number_of_classes) : is_leaf(true), feature(-1), split_value(0), class_label(0), number_of_classes(number_of_classes) {
+        classes = std::map<int, ClassObserver>();
+        for (int i = 0; i < number_of_classes; i++){
+            classes[i] = ClassObserver();
+        }
+    }
+    Node(bool is_leaf, int feature, float split_value, int class_label, std::map<int, ClassObserver> classes, std::vector<Node> children, unsigned int number_of_classes) :
+        is_leaf(is_leaf),
+        feature(feature),
+        split_value(split_value),
+        class_label(class_label),
+        classes(classes),
+        children(children),
+        number_of_classes(number_of_classes) {}
 };
 
 
@@ -68,17 +93,24 @@ public:
 
 class HoeffdingTree {
     public:
-        Node* root;
+        Node root;
         float delta;
         unsigned int min_samples;
+        unsigned int number_of_classes;
 
-        HoeffdingTree(float delta, int min_samples) : delta(delta), min_samples(min_samples) {
-            root = new Node();
+        HoeffdingTree(float delta, int min_samples, unsigned int number_of_classes, Node root)
+                : delta(delta), min_samples(min_samples), number_of_classes(number_of_classes), root(root) {
+            root = Node(number_of_classes);
         }
 
         void fit(const std::vector<float>&features, int class_label);
 
         int predict(const std::vector<float>& features);
-        
+
+        HoeffdingTree(Node root, float delta, int min_samples, unsigned int number_of_classes) :
+            root(root),
+            delta(delta),
+            min_samples(min_samples),
+            number_of_classes(number_of_classes) {}
 };
 #endif

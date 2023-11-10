@@ -42,10 +42,17 @@ float ClassObserver::getFeatureProbability(int featureNumber, float x){
     return p;
 }
 
+
 void Node::update_statistics(const std::vector<float>& features, int class_label){
     if (is_leaf){
         if (classes.find(class_label) == classes.end()){
             classes[class_label] = ClassObserver();
+        }
+        for (auto& classObserver : classes){
+            if(classObserver.second.maxValues.size() != features.size()){
+                classObserver.second.maxValues = std::vector<float>(features.size(),std::numeric_limits<float>::min());
+                classObserver.second.minValues = std::vector<float>(features.size(),std::numeric_limits<float>::max());
+            }
         }
         classes[class_label].addInstance(features);
         int bestClass = -1;
@@ -56,12 +63,12 @@ void Node::update_statistics(const std::vector<float>& features, int class_label
                 bestClass = classObserver.first;
             }
         }
-        this->class_label = 1-bestClass;
+        this->class_label = bestClass;
     }else{
         if (features[feature] < split_value){
-            children[0]->update_statistics(features, class_label);
+            children[0].update_statistics(features, class_label);
         }else{
-            children[1]->update_statistics(features, class_label);
+            children[1].update_statistics(features, class_label);
         }
     }
 }
@@ -131,10 +138,10 @@ std::vector<float> Node::getSplitSuggestions(int feature){
     float max_value = std::numeric_limits<float>::min();
     float min_value = std::numeric_limits<float>::max();
     for (auto& classObserver : classes){
-        if (classObserver.second.maxValues[feature] > max_value){
+        if (classObserver.second.maxValues[feature] > max_value) {
             max_value = classObserver.second.maxValues[feature];
         }
-        if (classObserver.second.minValues[feature] < min_value){
+        if (classObserver.second.minValues[feature] < min_value) {
             min_value = classObserver.second.minValues[feature];
         }
     }
@@ -149,7 +156,6 @@ std::vector<float> Node::getSplitSuggestions(int feature){
 }
 
 void Node::attemptToSplit(){
-    int min_samples = 10; //todo make this a parameter
     int num_samples = std::accumulate(classes.begin(), classes.end(), 0, [](int sum, std::pair<int, ClassObserver> p){return sum + p.second.counter;});
     if (num_samples < min_samples){
         return;
@@ -185,28 +191,30 @@ void Node::attemptToSplit(){
 
     if (bestGini - secondBestGini > epsilon){
         //split
+        //printf("splitting on feature %d, split value: %f\n",bestSplit.feature, bestSplit.split_value);
+
         //Serialdbg.println("splitting");
         is_leaf = false;
         feature = bestSplit.feature;
         split_value = bestSplit.split_value;
         class_label = 1;
-        children.push_back(new Node());
-        children.push_back(new Node());
+        children.push_back(Node(number_of_classes));
+        children.push_back(Node(number_of_classes));
         for (unsigned int  i = 0; i < classes.size(); i++){
-            children[0]->classes[i] = bestSplit.left_classes[i];
-            children[1]->classes[i] = bestSplit.right_classes[i];
+            children[0].classes[i] = bestSplit.left_classes[i];
+            children[1].classes[i] = bestSplit.right_classes[i];
         }
     }
 
 }
 
 void HoeffdingTree::fit(const std::vector<float>&features, int class_label){
-    Node* node = root;
+    Node* node = &root;
     while (!node->is_leaf){
         if (features[node->feature] < node->split_value){
-            node = node->children[0];
+            node = &node->children[0];
         }else{
-            node = node->children[1];
+            node = &node->children[1];
         }
     }
     //Serialdbg.println("updating statistics");
@@ -216,12 +224,12 @@ void HoeffdingTree::fit(const std::vector<float>&features, int class_label){
 }
 
 int HoeffdingTree::predict(const std::vector<float>&features){
-    Node* node = root;
+    Node* node = &root;
     while (!node->is_leaf){
         if (features[node->feature] < node->split_value){
-            node = node->children[0];
+            node = &node->children[0];
         }else{
-            node = node->children[1];
+            node = &node->children[1];
         }
     }
     //Serialdbg.println("predicted class: "+ String(node->class_label));
